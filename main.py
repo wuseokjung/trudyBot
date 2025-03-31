@@ -119,6 +119,7 @@ def main():
     app.add_handler(CommandHandler("walked", walked))
     app.add_handler(CommandHandler("join", join))
     app.add_handler(CommandHandler("bruh", bruh))
+    app.add_handler(CommandHandler("sigma", sigma))
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
     app.run_polling()
 
