@@ -55,17 +55,29 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
     if last_walked and (now - last_walked).total_seconds() < 14400:
         return
 
-    await context.bot.send_message(chat_id=chat_id, text="🦮 Someone take Trudy out please")
+    await context.bot.send_message(chat_id=chat_id, text="Can someone take me out?")
 
 async def reminder_scheduler(application):
+    sent_times = set()
+
     while True:
         now = datetime.datetime.now()
-        # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
-        if now.hour == 3 and now.minute in [17, 18, 19]:  # Test for 3:17am, 3:18am, 3:19am
+        key = (now.hour, now.minute)
+
+        if now.hour == 3 and now.minute in [25, 26, 27, 28] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 await send_reminder(None, chat_id)
-            await asyncio.sleep(60)
-        await asyncio.sleep(10)
+            sent_times.add(key)
+
+        await asyncio.sleep(5)
+        # while True:
+        #     now = datetime.datetime.now()
+        #     # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
+        #     if now.hour == 3 and now.minute in [17, 18, 19]:  # Test for 3:17am, 3:18am, 3:19am
+        #         for chat_id in group_last_walked_time.keys():
+        #             await send_reminder(None, chat_id)
+        #         await asyncio.sleep(60)
+        #     await asyncio.sleep(10)
 
 async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now()
@@ -79,7 +91,7 @@ async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     if bruh:
-        msg = "Trudy doesn't like you:\n" + "\n".join(f"- @{n}" for n in bruh)
+        msg = "Do you guys even care about me? " + " ".join(f"- @{n}" for n in bruh)
     else:
         msg = "✅ Everyone's been sigma today!"
 
@@ -96,9 +108,9 @@ async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     if sigma_walkers:
-        msg = "Well done you sigma's:\n" + "\n".join(f"- @{n}" for n in sigma_walkers)
+        msg = "Well done you sigma's " + " ".join(f"- @{n}" for n in sigma_walkers)
     else:
-        msg = "Bad day to be Trudy"
+        msg = "Bad day to be me ig"
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
@@ -109,7 +121,7 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         username = user.username or user.first_name
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"@{username} Use /join to volunteer to walk Trudy."
+            text=f"@{username} Use /join to volunteer to walk me!"
         )
 
 async def post_init(application):
