@@ -66,21 +66,21 @@ async def reminder_scheduler(application):
             await asyncio.sleep(60)
         await asyncio.sleep(10)
 
-async def bad(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now()
     chat_id = update.effective_chat.id
     group_log = group_walker_logs.get(chat_id, {})
     group_registered = registered_users.get(chat_id, set())
 
-    bad_list = [
+    bruh = [
         name for name in group_registered
         if name not in group_log or (now - group_log[name]).total_seconds() > 86400
     ]
 
-    if bad_list:
-        msg = "Trudy doesn't like you:\n" + "\n".join(f"- @{n}" for n in bad_list)
+    if bruh:
+        msg = "Trudy doesn't like you bruh:\n" + "\n".join(f"- @{n}" for n in bruh)
     else:
-        msg = "✅ Everyone's been good to Trudy today!"
+        msg = "✅ Everyone's been sigma today!"
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
@@ -101,7 +101,7 @@ def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("walked", walked))
     app.add_handler(CommandHandler("join", join))
-    app.add_handler(CommandHandler("bad", bad))
+    app.add_handler(CommandHandler("bruh", bruh))
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
     app.run_polling()
 
