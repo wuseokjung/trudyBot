@@ -30,7 +30,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"🐶 Trudy thanks you @{username}"
+        text=f"Trudy thanks you @{username}"
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -78,9 +78,26 @@ async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     if bruh:
-        msg = "Trudy doesn't like you bruh:\n" + "\n".join(f"- @{n}" for n in bruh)
+        msg = "Trudy doesn't like you:\n" + "\n".join(f"- @{n}" for n in bruh)
     else:
         msg = "✅ Everyone's been sigma today!"
+
+    await context.bot.send_message(chat_id=chat_id, text=msg)
+
+async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    now = datetime.datetime.now()
+    chat_id = update.effective_chat.id
+    group_log = group_walker_logs.get(chat_id, {})
+
+    sigma_walkers = [
+        name for name, time in group_log.items()
+        if (now - time).total_seconds() <= 86400
+    ]
+
+    if sigma_walkers:
+        msg = "Well done you sigma's:\n" + "\n".join(f"- @{n}" for n in sigma_walkers)
+    else:
+        msg = "Bad day to be Trudy"
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
