@@ -5,30 +5,47 @@ from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
+    MessageHandler,
     ContextTypes,
+    filters
 )
 
 TOKEN = os.getenv("TOKEN")
 
-# Track walk logs and reminders by group ID
+# Per-group tracking
 group_last_walked_time = {}
 group_walker_logs = {}
+registered_users = {}
 
 async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     now = datetime.datetime.now()
-
-    group_last_walked_time[chat_id] = now
     user = update.effective_user
     username = user.username or user.first_name
 
+    group_last_walked_time[chat_id] = now
     if chat_id not in group_walker_logs:
         group_walker_logs[chat_id] = {}
     group_walker_logs[chat_id][username] = now
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"✅ Trudy says thank you {user.first_name}!"
+        text=f"🐶 Trudy thanks you @{username}"
+    )
+
+async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    user = update.effective_user
+    username = user.username or user.first_name
+
+    if chat_id not in registered_users:
+        registered_users[chat_id] = set()
+
+    registered_users[chat_id].add(username)
+
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text=f"Thanks mate"
     )
 
 async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
@@ -36,7 +53,7 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
     last_walked = group_last_walked_time.get(chat_id)
 
     if last_walked and (now - last_walked).total_seconds() < 14400:
-        return  # Trudy was walked in the last 4 hours
+        return
 
     await context.bot.send_message(chat_id=chat_id, text="🦮 Someone take Trudy out please")
 
@@ -52,27 +69,30 @@ async def reminder_scheduler(application):
 async def bad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now()
     chat_id = update.effective_chat.id
+    group_log = group_walker_logs.get(chat_id, {})
+    group_registered = registered_users.get(chat_id, set())
 
-    try:
-        members = await context.bot.get_chat_administrators(chat_id=chat_id)
-        all_names = [m.user.username or m.user.first_name for m in members if not m.user.is_bot]
+    bad_list = [
+        name for name in group_registered
+        if name not in group_log or (now - group_log[name]).total_seconds() > 86400
+    ]
 
-        group_log = group_walker_logs.get(chat_id, {})
+    if bad_list:
+        msg = "Trudy doesn't like you:\n" + "\n".join(f"- @{n}" for n in bad_list)
+    else:
+        msg = "✅ Everyone has been good to Trudy today!"
 
-        bad_list = [
-            name for name in all_names
-            if name not in group_log or (now - group_log[name]).total_seconds() > 86400
-        ]
+    await context.bot.send_message(chat_id=chat_id, text=msg)
 
-        if bad_list:
-            bad_str = "Trudy doesn't like these people:\n" + "\n".join(f"- {n}" for n in bad_list)
-        else:
-            bad_str = "✅ Everyone has been good to Trudy today"
-
-        await context.bot.send_message(chat_id=chat_id, text=bad_str)
-
-    except Exception as e:
-        await context.bot.send_message(chat_id=chat_id, text=f"Error checking /bad: {e}")
+# ✅ New: Auto prompt when someone joins the group
+async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    for user in update.message.new_chat_members:
+        username = user.username or user.first_name
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"@{username} Use /join to volunteer to walk Trudy."
+        )
 
 async def post_init(application):
     asyncio.create_task(reminder_scheduler(application))
@@ -80,7 +100,9 @@ async def post_init(application):
 def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("walked", walked))
+    app.add_handler(CommandHandler("join", join))
     app.add_handler(CommandHandler("bad", bad))
+    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
     app.run_polling()
 
 if __name__ == '__main__':
