@@ -45,4 +45,5 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler("walked", walked))
 
     schedule_reminders(updater)
+    print(updater.bot.get_updates())
     updater.start_polling()
