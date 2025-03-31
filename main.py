@@ -52,15 +52,17 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=f"Thanks mate"
     )
 
-async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
+# ✅ Updated: accepts bot instead of context
+async def send_reminder(bot, chat_id):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     last_walked = group_last_walked_time.get(chat_id)
 
     if last_walked and (now - last_walked).total_seconds() < 14400:
         return
 
-    await context.bot.send_message(chat_id=chat_id, text="Can someone take me out?")
+    await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
 
+# ✅ Updated: pass application.bot into send_reminder
 async def reminder_scheduler(application):
     sent_times = set()
 
@@ -71,15 +73,13 @@ async def reminder_scheduler(application):
         print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
         print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
 
-        # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
-        if now.hour == 3 and now.minute in [46, 47, 48, 49] and key not in sent_times:
+        if now.hour == 3 and now.minute in [52, 53, 54, 55] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
-                await send_reminder(None, chat_id)
+                await send_reminder(application.bot, chat_id)
             sent_times.add(key)
 
         await asyncio.sleep(5)
-
 
 async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
@@ -116,7 +116,7 @@ async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
-# ✅ New: Auto prompt when someone joins the group
+# ✅ Auto prompt when someone joins the group
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     for user in update.message.new_chat_members:
