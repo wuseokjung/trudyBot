@@ -60,7 +60,8 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
 async def reminder_scheduler(application):
     while True:
         now = datetime.datetime.now()
-        if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
+        # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
+        if now.hour == 3 and now.minute in [17, 18, 19]:  # Test for 3:17am, 3:18am, 3:19am
             for chat_id in group_last_walked_time.keys():
                 await send_reminder(None, chat_id)
             await asyncio.sleep(60)
