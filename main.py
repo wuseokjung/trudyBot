@@ -71,21 +71,15 @@ async def reminder_scheduler(application):
         print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
         print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
 
-        if now.hour == 3 and now.minute in [42, 43, 44, 45] and key not in sent_times:
-            print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
+        # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
+        if now.hour == 3 and now.minute in [46, 47, 48, 49] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
+                print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
                 await send_reminder(None, chat_id)
             sent_times.add(key)
 
         await asyncio.sleep(5)
-        # while True:
-        #     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
-        #     # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
-        #     if now.hour == 3 and now.minute in [17, 18, 19]:  # Test for 3:17am, 3:18am, 3:19am
-        #         for chat_id in group_last_walked_time.keys():
-        #             await send_reminder(None, chat_id)
-        #         await asyncio.sleep(60)
-        #     await asyncio.sleep(10)
+
 
 async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
