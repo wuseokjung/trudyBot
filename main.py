@@ -80,7 +80,7 @@ async def bad(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if bad_list:
         msg = "Trudy doesn't like you:\n" + "\n".join(f"- @{n}" for n in bad_list)
     else:
-        msg = "✅ Everyone has been good to Trudy today!"
+        msg = "✅ Everyone's been good to Trudy today!"
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
