@@ -31,7 +31,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Trudy thanks you @{username}"
+        text=f"Thank you @{username}"
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,7 +68,11 @@ async def reminder_scheduler(application):
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
         key = (now.hour, now.minute)
 
-        if now.hour == 3 and now.minute in [37, 38, 39, 40] and key not in sent_times:
+        print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
+        print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
+
+        if now.hour == 3 and now.minute in [42, 43, 44, 45] and key not in sent_times:
+            print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
             for chat_id in group_last_walked_time.keys():
                 await send_reminder(None, chat_id)
             sent_times.add(key)
