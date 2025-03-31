@@ -1,6 +1,7 @@
 import os
 import datetime
 import asyncio
+from zoneinfo import ZoneInfo
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -19,7 +20,7 @@ registered_users = {}
 
 async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     user = update.effective_user
     username = user.username or user.first_name
 
@@ -49,7 +50,7 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def send_reminder(context: ContextTypes.DEFAULT_TYPE, chat_id):
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     last_walked = group_last_walked_time.get(chat_id)
 
     if last_walked and (now - last_walked).total_seconds() < 14400:
@@ -61,17 +62,17 @@ async def reminder_scheduler(application):
     sent_times = set()
 
     while True:
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
         key = (now.hour, now.minute)
 
-        if now.hour == 3 and now.minute in [25, 26, 27, 28] and key not in sent_times:
+        if now.hour == 3 and now.minute in [30, 31, 32, 33] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 await send_reminder(None, chat_id)
             sent_times.add(key)
 
         await asyncio.sleep(5)
         # while True:
-        #     now = datetime.datetime.now()
+        #     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
         #     # //if now.hour in [0, 9, 13, 17, 21] and now.minute == 0:
         #     if now.hour == 3 and now.minute in [17, 18, 19]:  # Test for 3:17am, 3:18am, 3:19am
         #         for chat_id in group_last_walked_time.keys():
@@ -80,7 +81,7 @@ async def reminder_scheduler(application):
         #     await asyncio.sleep(10)
 
 async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     chat_id = update.effective_chat.id
     group_log = group_walker_logs.get(chat_id, {})
     group_registered = registered_users.get(chat_id, set())
@@ -98,7 +99,7 @@ async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
 async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     chat_id = update.effective_chat.id
     group_log = group_walker_logs.get(chat_id, {})
 
