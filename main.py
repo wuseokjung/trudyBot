@@ -64,12 +64,12 @@ async def bad(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def post_init(application):
     asyncio.create_task(reminder_scheduler(application))
 
-async def main():
+def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("walked", walked))
     app.add_handler(CommandHandler("bad", bad))
-
-    await app.run_polling()
+    app.run_polling()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
+
