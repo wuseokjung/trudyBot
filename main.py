@@ -44,6 +44,9 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     registered_users[chat_id].add(username)
 
+    if chat_id not in group_last_walked_time:
+        group_last_walked_time[chat_id] = None
+
     await context.bot.send_message(
         chat_id=chat_id,
         text=f"Thanks mate"
@@ -65,7 +68,7 @@ async def reminder_scheduler(application):
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
         key = (now.hour, now.minute)
 
-        if now.hour == 3 and now.minute in [30, 31, 32, 33] and key not in sent_times:
+        if now.hour == 3 and now.minute in [37, 38, 39, 40] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 await send_reminder(None, chat_id)
             sent_times.add(key)
