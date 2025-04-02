@@ -13,7 +13,6 @@ from telegram.ext import (
 
 TOKEN = os.getenv("TOKEN")
 
-# Per-group tracking
 group_last_walked_time = {}
 group_walker_logs = {}
 registered_users = {}
@@ -49,10 +48,9 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Thanks mate"
+        text=f"Nice to meet you bruh 🐶"
     )
 
-# ✅ Updated: accepts bot instead of context
 async def send_reminder(bot, chat_id):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     last_walked = group_last_walked_time.get(chat_id)
@@ -62,7 +60,6 @@ async def send_reminder(bot, chat_id):
 
     await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
 
-# ✅ Updated: pass application.bot into send_reminder
 async def reminder_scheduler(application):
     sent_times = set()
 
@@ -116,14 +113,13 @@ async def reminder_scheduler(application):
 
 #     await context.bot.send_message(chat_id=chat_id, text=msg)
 
-# ✅ Auto prompt when someone joins the group
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     for user in update.message.new_chat_members:
         username = user.username or user.first_name
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"@{username} Use /join to volunteer to walk me!"
+            text=f"@{username} Use /join to volunteer to walk me! Here's all you need to know:\n/walked - you walked me\n/list - get a list of sigmas and bad people"
         )
 
 async def post_init(application):
@@ -136,30 +132,27 @@ async def list_walkers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     group_log = group_walker_logs.get(chat_id, {})
     group_registered = registered_users.get(chat_id, set())
 
-    # Get sigmas (people who walked within last 24h)
     sigmas = [
         name for name, time in group_log.items()
         if (now - time).total_seconds() <= 86400
     ]
 
-    # Get bad people (registered but haven't walked in 24h or never walked)
     bad_people = [
         name for name in group_registered
         if name not in group_log or (now - group_log[name]).total_seconds() > 86400
     ]
 
-    # Format the message
     msg_parts = []
     if sigmas:
         msg_parts.append("well done you sigmas:")
         msg_parts.extend(f"@{name}" for name in sigmas)
-        msg_parts.append("")  # Empty line between sections
+        msg_parts.append("")
     
     if bad_people:
         msg_parts.append("👎 bad people:")
         msg_parts.extend(f"@{name}" for name in bad_people)
     
-    msg = "\n".join(msg_parts) if msg_parts else "No registered walkers yet!"
+    msg = "\n".join(msg_parts) if msg_parts else "No registered walkers yet. Use /join to start walking me"
 
     await context.bot.send_message(chat_id=chat_id, text=msg)
 
