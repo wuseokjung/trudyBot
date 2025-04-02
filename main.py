@@ -48,7 +48,7 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Nice to meet you bruh 🐶"
+        text=f"Nice to meet u bruh 🐶"
     )
 
 async def send_reminder(bot, chat_id):
@@ -72,8 +72,8 @@ async def send_follow_up_reminder(bot, chat_id):
 
 async def reminder_scheduler(application):
     sent_times = set()
-    follow_up_sent = set()  # Track which reminders have had follow-ups
-    reminder_hours = [8, 12, 16, 20, 0]  # 8am, 12pm, 4pm, 8pm, 12am
+    follow_up_sent = set()
+    reminder_hours = [8, 12, 16, 20, 0]
 
     while True:
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
@@ -94,52 +94,15 @@ async def reminder_scheduler(application):
             if now.hour == follow_up_hour and now.minute == 0 and (reminder_hour, chat_id) not in follow_up_sent:
                 for chat_id in group_last_walked_time.keys():
                     last_walked = group_last_walked_time.get(chat_id)
-                    if not last_walked or (now - last_walked).total_seconds() >= 7200:  # 2 hours
+                    if not last_walked or (now - last_walked).total_seconds() >= 7200:
                         await send_follow_up_reminder(application.bot, chat_id)
                         follow_up_sent.add((reminder_hour, chat_id))
 
-        # Clear tracking sets at the start of each hour
         if now.minute == 1:
             sent_times.clear()
-            # Only clear follow-ups from the previous hour
             follow_up_sent = {(h, c) for h, c in follow_up_sent if h != (now.hour - 1) % 24}
 
         await asyncio.sleep(30)
-
-# async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
-#     chat_id = update.effective_chat.id
-#     group_log = group_walker_logs.get(chat_id, {})
-#     group_registered = registered_users.get(chat_id, set())
-
-#     bruh = [
-#         name for name in group_registered
-#         if name not in group_log or (now - group_log[name]).total_seconds() > 86400
-#     ]
-
-#     if bruh:
-#         msg = "Do you guys even care about me? " + " ".join(f"- @{n}" for n in bruh)
-#     else:
-#         msg = "✅ Everyone's been sigma today!"
-
-#     await context.bot.send_message(chat_id=chat_id, text=msg)
-
-# async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
-#     chat_id = update.effective_chat.id
-#     group_log = group_walker_logs.get(chat_id, {})
-
-#     sigma_walkers = [
-#         name for name, time in group_log.items()
-#         if (now - time).total_seconds() <= 86400
-#     ]
-
-#     if sigma_walkers:
-#         msg = "Well done you sigma's " + " ".join(f"- @{n}" for n in sigma_walkers)
-#     else:
-#         msg = "Bad day to be me ig"
-
-#     await context.bot.send_message(chat_id=chat_id, text=msg)
 
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
