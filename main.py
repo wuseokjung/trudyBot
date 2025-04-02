@@ -22,6 +22,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     user = update.effective_user
     username = user.username or user.first_name
+    topic = update.message.message_thread_id if update.message else None
 
     group_last_walked_time[chat_id] = now
     if chat_id not in group_walker_logs:
@@ -30,7 +31,8 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Cheers mate @{username}. Did I poo or pee? Everyone's curious 🦮"
+        text=f"Cheers mate @{username}. Did I poo or pee? Everyone's curious 🦮",
+        message_thread_id=topic
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -46,7 +48,7 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_id not in group_last_walked_time:
         group_last_walked_time[chat_id] = None
 
-    topic = context.message.message_thread_id
+    topic = update.message.message_thread_id if update.message else None
 
     await context.bot.send_message(
         chat_id=chat_id,
@@ -54,14 +56,18 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_thread_id=topic
     )
 
-async def send_reminder(bot, chat_id):
+async def send_reminder(bot, chat_id, topic=None):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     last_walked = group_last_walked_time.get(chat_id)
 
     if last_walked and (now - last_walked).total_seconds() < 14400:  # 4 hours
         return
 
-    await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
+    await bot.send_message(
+        chat_id=chat_id, 
+        text="Can someone take me out?",
+        message_thread_id=topic
+    )
 
 async def reset_logs(bot, chat_id):
     # Reset the walking logs at midnight
@@ -70,13 +76,18 @@ async def reset_logs(bot, chat_id):
     if chat_id in group_last_walked_time:
         group_last_walked_time[chat_id] = None
 
-async def send_follow_up_reminder(bot, chat_id):
-    await bot.send_message(chat_id=chat_id, text="do u guys even care about me 😞")
+async def send_follow_up_reminder(bot, chat_id, topic=None):
+    await bot.send_message(
+        chat_id=chat_id, 
+        text="do u guys even care about me 😞",
+        message_thread_id=topic
+    )
 
 async def reminder_scheduler(application):
     sent_times = set()
     follow_up_sent = set()
     reminder_hours = [8, 12, 16, 20, 0]
+    topics = {}  # Store topic IDs for each chat
 
     while True:
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
@@ -86,7 +97,7 @@ async def reminder_scheduler(application):
         if now.hour in reminder_hours and now.minute == 0 and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
-                await send_reminder(application.bot, chat_id)
+                await send_reminder(application.bot, chat_id, topics.get(chat_id))
                 if now.hour == 0:
                     await reset_logs(application.bot, chat_id)
             sent_times.add(key)
@@ -98,7 +109,7 @@ async def reminder_scheduler(application):
                 for chat_id in group_last_walked_time.keys():
                     last_walked = group_last_walked_time.get(chat_id)
                     if not last_walked or (now - last_walked).total_seconds() >= 7200:
-                        await send_follow_up_reminder(application.bot, chat_id)
+                        await send_follow_up_reminder(application.bot, chat_id, topics.get(chat_id))
                         follow_up_sent.add((reminder_hour, chat_id))
 
         if now.minute == 1:
@@ -109,11 +120,13 @@ async def reminder_scheduler(application):
 
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
+    topic = update.message.message_thread_id if update.message else None
     for user in update.message.new_chat_members:
         username = user.username or user.first_name
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"@{username} Use /join to volunteer to walk me! Here's all you need to know:\n/walked - you walked me\n/list - get a list of sigmas and bad people"
+            text=f"@{username} Use /join to volunteer to walk me! Here's all you need to know:\n/walked - you walked me\n/list - get a list of sigmas and bad people",
+            message_thread_id=topic
         )
 
 async def post_init(application):
@@ -123,6 +136,7 @@ async def post_init(application):
 async def list_walkers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     chat_id = update.effective_chat.id
+    topic = update.message.message_thread_id if update.message else None
     group_log = group_walker_logs.get(chat_id, {})
     group_registered = registered_users.get(chat_id, set())
 
@@ -148,7 +162,11 @@ async def list_walkers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     msg = "\n".join(msg_parts) if msg_parts else "No registered walkers yet. Use /join to start walking me"
 
-    await context.bot.send_message(chat_id=chat_id, text=msg)
+    await context.bot.send_message(
+        chat_id=chat_id, 
+        text=msg,
+        message_thread_id=topic
+    )
 
 def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
