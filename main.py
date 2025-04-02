@@ -31,7 +31,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Thank you @{username}"
+        text=f"Cheers mate @{username}"
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,40 +81,40 @@ async def reminder_scheduler(application):
 
         await asyncio.sleep(5)
 
-async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
-    chat_id = update.effective_chat.id
-    group_log = group_walker_logs.get(chat_id, {})
-    group_registered = registered_users.get(chat_id, set())
+# async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
+#     chat_id = update.effective_chat.id
+#     group_log = group_walker_logs.get(chat_id, {})
+#     group_registered = registered_users.get(chat_id, set())
 
-    bruh = [
-        name for name in group_registered
-        if name not in group_log or (now - group_log[name]).total_seconds() > 86400
-    ]
+#     bruh = [
+#         name for name in group_registered
+#         if name not in group_log or (now - group_log[name]).total_seconds() > 86400
+#     ]
 
-    if bruh:
-        msg = "Do you guys even care about me? " + " ".join(f"- @{n}" for n in bruh)
-    else:
-        msg = "✅ Everyone's been sigma today!"
+#     if bruh:
+#         msg = "Do you guys even care about me? " + " ".join(f"- @{n}" for n in bruh)
+#     else:
+#         msg = "✅ Everyone's been sigma today!"
 
-    await context.bot.send_message(chat_id=chat_id, text=msg)
+#     await context.bot.send_message(chat_id=chat_id, text=msg)
 
-async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
-    chat_id = update.effective_chat.id
-    group_log = group_walker_logs.get(chat_id, {})
+# async def sigma(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
+#     chat_id = update.effective_chat.id
+#     group_log = group_walker_logs.get(chat_id, {})
 
-    sigma_walkers = [
-        name for name, time in group_log.items()
-        if (now - time).total_seconds() <= 86400
-    ]
+#     sigma_walkers = [
+#         name for name, time in group_log.items()
+#         if (now - time).total_seconds() <= 86400
+#     ]
 
-    if sigma_walkers:
-        msg = "Well done you sigma's " + " ".join(f"- @{n}" for n in sigma_walkers)
-    else:
-        msg = "Bad day to be me ig"
+#     if sigma_walkers:
+#         msg = "Well done you sigma's " + " ".join(f"- @{n}" for n in sigma_walkers)
+#     else:
+#         msg = "Bad day to be me ig"
 
-    await context.bot.send_message(chat_id=chat_id, text=msg)
+#     await context.bot.send_message(chat_id=chat_id, text=msg)
 
 # ✅ Auto prompt when someone joins the group
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,12 +130,44 @@ async def post_init(application):
     await application.initialize()
     asyncio.create_task(reminder_scheduler(application))
 
+async def list_walkers(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
+    chat_id = update.effective_chat.id
+    group_log = group_walker_logs.get(chat_id, {})
+    group_registered = registered_users.get(chat_id, set())
+
+    # Get sigmas (people who walked within last 24h)
+    sigmas = [
+        name for name, time in group_log.items()
+        if (now - time).total_seconds() <= 86400
+    ]
+
+    # Get bad people (registered but haven't walked in 24h or never walked)
+    bad_people = [
+        name for name in group_registered
+        if name not in group_log or (now - group_log[name]).total_seconds() > 86400
+    ]
+
+    # Format the message
+    msg_parts = []
+    if sigmas:
+        msg_parts.append("sigmas:")
+        msg_parts.extend(f"@{name}" for name in sigmas)
+        msg_parts.append("")  # Empty line between sections
+    
+    if bad_people:
+        msg_parts.append("👎 bad people:")
+        msg_parts.extend(f"@{name}" for name in bad_people)
+    
+    msg = "\n".join(msg_parts) if msg_parts else "No registered walkers yet!"
+
+    await context.bot.send_message(chat_id=chat_id, text=msg)
+
 def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("walked", walked))
     app.add_handler(CommandHandler("join", join))
-    app.add_handler(CommandHandler("bruh", bruh))
-    app.add_handler(CommandHandler("sigma", sigma))
+    app.add_handler(CommandHandler("list", list_walkers))
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
     app.run_polling()
 
