@@ -46,9 +46,12 @@ async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_id not in group_last_walked_time:
         group_last_walked_time[chat_id] = None
 
+    topic = context.message.message_thread_id
+
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Nice to meet u bruh 🐶"
+        text=f"Nice to meet u bruh 🐶",
+        message_thread_id=topic
     )
 
 async def send_reminder(bot, chat_id):
