@@ -60,11 +60,7 @@ async def send_reminder(bot, chat_id):
     if last_walked and (now - last_walked).total_seconds() < 14400:
         return
 
-    try:
-        await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
-        print(f"✅ Message sent successfully to {chat_id}")
-    except Exception as e:
-        print(f"❌ Failed to send message to {chat_id}: {e}")
+    await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
 
 # ✅ Updated: pass application.bot into send_reminder
 async def reminder_scheduler(application):
@@ -77,7 +73,7 @@ async def reminder_scheduler(application):
         print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
         print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
 
-        if now.hour == 4 and now.minute in [3, 4, 5, 6] and key not in sent_times:
+        if now.hour == 1 and now.minute in [10, 11, 12, 13] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
                 await send_reminder(application.bot, chat_id)
