@@ -30,7 +30,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Cheers mate @{username} 🦮"
+        text=f"Cheers mate @{username}. Did I poo or pee? Everyone's curious 🦮"
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -55,28 +55,56 @@ async def send_reminder(bot, chat_id):
     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
     last_walked = group_last_walked_time.get(chat_id)
 
-    if last_walked and (now - last_walked).total_seconds() < 14400:
+    if last_walked and (now - last_walked).total_seconds() < 14400:  # 4 hours
         return
 
     await bot.send_message(chat_id=chat_id, text="Can someone take me out?")
 
+async def reset_logs(bot, chat_id):
+    # Reset the walking logs at midnight
+    if chat_id in group_walker_logs:
+        group_walker_logs[chat_id] = {}
+    if chat_id in group_last_walked_time:
+        group_last_walked_time[chat_id] = None
+
+async def send_follow_up_reminder(bot, chat_id):
+    await bot.send_message(chat_id=chat_id, text="do u guys even care about me 😞")
+
 async def reminder_scheduler(application):
     sent_times = set()
+    follow_up_sent = set()  # Track which reminders have had follow-ups
+    reminder_hours = [8, 12, 16, 20, 0]  # 8am, 12pm, 4pm, 8pm, 12am
 
     while True:
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
         key = (now.hour, now.minute)
 
-        print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
-        print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
-
-        if now.hour == 1 and now.minute in [24, 25, 26, 27] and key not in sent_times:
+        # Regular reminders
+        if now.hour in reminder_hours and now.minute == 0 and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
                 await send_reminder(application.bot, chat_id)
+                if now.hour == 0:
+                    await reset_logs(application.bot, chat_id)
             sent_times.add(key)
+        
+        # Follow-up check (2 hours after each reminder)
+        for reminder_hour in reminder_hours:
+            follow_up_hour = (reminder_hour + 2) % 24
+            if now.hour == follow_up_hour and now.minute == 0 and (reminder_hour, chat_id) not in follow_up_sent:
+                for chat_id in group_last_walked_time.keys():
+                    last_walked = group_last_walked_time.get(chat_id)
+                    if not last_walked or (now - last_walked).total_seconds() >= 7200:  # 2 hours
+                        await send_follow_up_reminder(application.bot, chat_id)
+                        follow_up_sent.add((reminder_hour, chat_id))
 
-        await asyncio.sleep(5)
+        # Clear tracking sets at the start of each hour
+        if now.minute == 1:
+            sent_times.clear()
+            # Only clear follow-ups from the previous hour
+            follow_up_sent = {(h, c) for h, c in follow_up_sent if h != (now.hour - 1) % 24}
+
+        await asyncio.sleep(30)
 
 # async def bruh(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
