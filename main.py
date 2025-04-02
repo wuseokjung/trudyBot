@@ -16,6 +16,7 @@ TOKEN = os.getenv("TOKEN")
 group_last_walked_time = {}
 group_walker_logs = {}
 registered_users = {}
+topic_settings = {}  # New dictionary to store topic IDs for each chat
 
 async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -83,11 +84,34 @@ async def send_follow_up_reminder(bot, chat_id, topic=None):
         message_thread_id=topic
     )
 
+async def settopic(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    user = update.effective_user
+    topic = update.message.message_thread_id if update.message else None
+
+    # Check if user is admin
+    chat_member = await context.bot.get_chat_member(chat_id, user.id)
+    if chat_member.status not in ['administrator', 'creator']:
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="Sorry, only admins can set the topic 🐾",
+            message_thread_id=topic
+        )
+        return
+
+    # Store the topic ID
+    topic_settings[chat_id] = topic
+    
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="Topic set! I'll send my reminders here 🐶",
+        message_thread_id=topic
+    )
+
 async def reminder_scheduler(application):
     sent_times = set()
     follow_up_sent = set()
     reminder_hours = [8, 12, 16, 20, 0]
-    topics = {}  # Store topic IDs for each chat
 
     while True:
         now = datetime.datetime.now(tz=ZoneInfo("America/Los_Angeles"))
@@ -97,7 +121,7 @@ async def reminder_scheduler(application):
         if now.hour in reminder_hours and now.minute == 0 and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
-                await send_reminder(application.bot, chat_id, topics.get(chat_id))
+                await send_reminder(application.bot, chat_id, topic_settings.get(chat_id))
                 if now.hour == 0:
                     await reset_logs(application.bot, chat_id)
             sent_times.add(key)
@@ -109,7 +133,7 @@ async def reminder_scheduler(application):
                 for chat_id in group_last_walked_time.keys():
                     last_walked = group_last_walked_time.get(chat_id)
                     if not last_walked or (now - last_walked).total_seconds() >= 7200:
-                        await send_follow_up_reminder(application.bot, chat_id, topics.get(chat_id))
+                        await send_follow_up_reminder(application.bot, chat_id, topic_settings.get(chat_id))
                         follow_up_sent.add((reminder_hour, chat_id))
 
         if now.minute == 1:
@@ -173,6 +197,7 @@ def main():
     app.add_handler(CommandHandler("walked", walked))
     app.add_handler(CommandHandler("join", join))
     app.add_handler(CommandHandler("list", list_walkers))
+    app.add_handler(CommandHandler("settopic", settopic))
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
     app.run_polling()
 
