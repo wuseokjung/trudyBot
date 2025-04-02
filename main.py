@@ -31,7 +31,7 @@ async def walked(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(
         chat_id=chat_id,
-        text=f"Cheers mate @{username}"
+        text=f"Cheers mate @{username} 🦮"
     )
 
 async def join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -73,7 +73,7 @@ async def reminder_scheduler(application):
         print(f"🕒 Current time (PT): {now.strftime('%H:%M:%S')}")
         print(f"Tracked chat_ids: {list(group_last_walked_time.keys())}")
 
-        if now.hour == 1 and now.minute in [10, 11, 12, 13] and key not in sent_times:
+        if now.hour == 1 and now.minute in [24, 25, 26, 27] and key not in sent_times:
             for chat_id in group_last_walked_time.keys():
                 print(f"Sending reminder at {now.strftime('%H:%M:%S')} to chat {chat_id}")
                 await send_reminder(application.bot, chat_id)
@@ -151,7 +151,7 @@ async def list_walkers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Format the message
     msg_parts = []
     if sigmas:
-        msg_parts.append("sigmas:")
+        msg_parts.append("well done you sigmas:")
         msg_parts.extend(f"@{name}" for name in sigmas)
         msg_parts.append("")  # Empty line between sections
     
