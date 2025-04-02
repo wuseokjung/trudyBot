@@ -65,7 +65,7 @@ async def send_reminder(bot, chat_id, topic=None):
 
     await bot.send_message(
         chat_id=chat_id, 
-        text="Can someone take me out?",
+        text="Can someone take me out? 🙄",
         message_thread_id=topic
     )
 
